@@ -13,3 +13,6 @@ def clickButton4(ser):
 def clickButton5(ser):
     ser.write("5".encode())
     print("Turning right")
+def clickButton6(ser):
+    ser.write("6".encode())
+    print("Turning ON Avoid Obstacles Mode...")
