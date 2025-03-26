@@ -97,7 +97,7 @@ void leerDistancia() {
 void autoModeAvoid() {
   leerDistancia();
   if (distance > 15) {
-    // Si la distancia es mayor a 10 cm, el servo se queda en su posición inicial y sigue avanzando el coche
+    // Si la distancia es mayor a 15 cm, el servo se queda en su posición inicial y sigue avanzando el coche
     myServo.write(90);
     forward();  // Avanzar
   } else {
@@ -109,7 +109,7 @@ void autoModeAvoid() {
     leerDistancia();  // Recalcular la distancia con el sensor ultrasónico mirando hacia la izquierda
 
     if (distance > 15) {
-      // Si la distancia nueva mirando a la izquierda es mayor a 10 cm, girar el coche
+      // Si la distancia nueva mirando a la izquierda es mayor a 15 cm, girar el coche
       myServo.write(180);
       delay(1000);
       turnLeft();
@@ -119,10 +119,11 @@ void autoModeAvoid() {
       delay(1000);
       leerDistancia();
       if (distance > 15) {
-        myServo.write(180);
+        myServo.write(90);
         delay(1000);
         turnRight();
         stopMotors();
+        //myServo.write(90);
       } else {
         myServo.write(0);
         delay(1000);

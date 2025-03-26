@@ -37,5 +37,6 @@ button6.place(relx=0.85, rely=0.9, anchor='center')
 
 window.mainloop()
 
+ser.close() # Cerrar la conexión serial cuando se termina la ejecución del programa
 
 
