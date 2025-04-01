@@ -15,6 +15,17 @@ char op;
 long duration;
 int distance;
 bool autoMode = false;
+bool isMoving = false; 
+
+enum Estado {
+  IDLE,
+  MOVING_FORWARD,
+  MOVING_BACK,
+  TURNING_LEFT,
+  TURNING_RIGHT
+};
+
+Estado currentState = IDLE;
 
 void setup() {
   Serial.begin(9600);
@@ -30,56 +41,55 @@ void setup() {
 
   myServo.attach(PIN_Servo_z);
   myServo.write(90);
-  delay(500);
-
+  
   digitalWrite(DRIVER_ENABLE_PIN, HIGH);
 }
 
 void forward() {
   digitalWrite(MOTOR_LEFT_DIRECTION_PIN, HIGH);
-  analogWrite(MOTOR_LEFT_SPEED_PIN, 50);
+  analogWrite(MOTOR_LEFT_SPEED_PIN, 75);
   digitalWrite(MOTOR_RIGHT_DIRECTION_PIN, HIGH);
-  analogWrite(MOTOR_RIGHT_SPEED_PIN, 50);
-  delay(500);
+  analogWrite(MOTOR_RIGHT_SPEED_PIN, 75);
+  currentState = MOVING_FORWARD;  
 }
 
 void stopMotors() {
   digitalWrite(MOTOR_LEFT_SPEED_PIN, 0);
   digitalWrite(MOTOR_RIGHT_SPEED_PIN, 0);
+  myServo.write(90);
+  currentState = IDLE;  
 }
 
 void back() {
   digitalWrite(MOTOR_LEFT_DIRECTION_PIN, LOW);
-  analogWrite(MOTOR_LEFT_SPEED_PIN, 50);
+  analogWrite(MOTOR_LEFT_SPEED_PIN, 70);
   digitalWrite(MOTOR_RIGHT_DIRECTION_PIN, LOW);
-  analogWrite(MOTOR_RIGHT_SPEED_PIN, 50);
-  delay(1350);
+  analogWrite(MOTOR_RIGHT_SPEED_PIN, 70);
+  currentState = MOVING_BACK;  
 }
 
 void turnLeft() {
-  // Giro a la derecha 90 grados
   digitalWrite(MOTOR_LEFT_DIRECTION_PIN, HIGH);
-  analogWrite(MOTOR_LEFT_SPEED_PIN, 50);
+  analogWrite(MOTOR_LEFT_SPEED_PIN, 100);
   digitalWrite(MOTOR_RIGHT_DIRECTION_PIN, LOW);
-  analogWrite(MOTOR_RIGHT_SPEED_PIN, 50);
-  delay(1350);
+  analogWrite(MOTOR_RIGHT_SPEED_PIN, 100);
+  
+  delay(700);
 
-  // Detener motores
-  digitalWrite(MOTOR_LEFT_SPEED_PIN, 0);
-  digitalWrite(MOTOR_RIGHT_SPEED_PIN, 0);
+  stopMotors();
+  currentState = IDLE;
 }
 
 void turnRight() {
-  // Giro a la izquierda 90 grados
   digitalWrite(MOTOR_LEFT_DIRECTION_PIN, LOW);
-  analogWrite(MOTOR_LEFT_SPEED_PIN, 50);
+  analogWrite(MOTOR_LEFT_SPEED_PIN, 100);
   digitalWrite(MOTOR_RIGHT_DIRECTION_PIN, HIGH);
-  analogWrite(MOTOR_RIGHT_SPEED_PIN, 50);
-  delay(1350);
+  analogWrite(MOTOR_RIGHT_SPEED_PIN, 100);
+  
+  delay(700);
 
-  // Detener motores
-  digitalWrite(MOTOR_LEFT_SPEED_PIN, 0);
-  digitalWrite(MOTOR_RIGHT_SPEED_PIN, 0);
+  stopMotors();
+  currentState = IDLE; 
 }
 
 void leerDistancia() {
@@ -97,36 +107,27 @@ void leerDistancia() {
 void autoModeAvoid() {
   leerDistancia();
   if (distance > 15) {
-    // Si la distancia es mayor a 15 cm, el servo se queda en su posición inicial y sigue avanzando el coche
     myServo.write(90);
-    forward();  // Avanzar
+    forward();
   } else {
-    stopMotors();  // Detener los motores
-
-    myServo.write(180);  // Giro a 180 grados (Izquierda)
+    stopMotors();
+    myServo.write(180);
     delay(1000);
-
-    leerDistancia();  // Recalcular la distancia con el sensor ultrasónico mirando hacia la izquierda
-
+    leerDistancia();
     if (distance > 15) {
-      // Si la distancia nueva mirando a la izquierda es mayor a 15 cm, girar el coche
-      myServo.write(180);
-      delay(1000);
+      myServo.write(90);
       turnLeft();
       stopMotors();
     } else {
-      myServo.write(0);  // Si no hay camino disponible, continuar con la dirección inicial
+      myServo.write(0);
       delay(1000);
       leerDistancia();
       if (distance > 15) {
         myServo.write(90);
-        delay(1000);
         turnRight();
         stopMotors();
-        //myServo.write(90);
       } else {
         myServo.write(0);
-        delay(1000);
         stopMotors();
       }
     }
@@ -144,24 +145,30 @@ void loop() {
     } else if (op == '2') {
       stopMotors();
       autoMode = false;
-
     } else if (op == '3') {
       back();
       autoMode = false;
-
     } else if (op == '4') {
       turnLeft();
       autoMode = false;
-
     } else if (op == '5') {
       turnRight();
       autoMode = false;
-
     } else if (op == '6') {
       autoMode = true;
+    } else if (op == '7') {
+      myServo.write(180);
+      delay(1000);
+      myServo.write(90);
+    } else if (op == '8') {
+      myServo.write(0);
+      delay(1000);
+      myServo.write(90);
     }
   }
-  if (autoMode){
+
+  if (autoMode) {
     autoModeAvoid();
   }
+
 }
