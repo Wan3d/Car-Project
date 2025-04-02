@@ -23,3 +23,8 @@ def clickButton7(ser):
 def clickButton8(ser):
     ser.write("8".encode())
     print("Turning right Servo")
+
+def clickButton9(ser):
+    ser.write("9".encode())
+    print("Putting servo on initial position")
+

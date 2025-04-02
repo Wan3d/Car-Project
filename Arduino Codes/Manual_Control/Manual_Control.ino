@@ -15,14 +15,17 @@ char op;
 long duration;
 int distance;
 bool autoMode = false;
-bool isMoving = false; 
+bool isMoving = false;
 
 enum Estado {
   IDLE,
   MOVING_FORWARD,
   MOVING_BACK,
   TURNING_LEFT,
-  TURNING_RIGHT
+  TURNING_RIGHT,
+  TURNING_LEFT_SERVO,
+  TURNING_RIGHT_SERVO,
+  INITIAL_POSITION
 };
 
 Estado currentState = IDLE;
@@ -41,7 +44,7 @@ void setup() {
 
   myServo.attach(PIN_Servo_z);
   myServo.write(90);
-  
+
   digitalWrite(DRIVER_ENABLE_PIN, HIGH);
 }
 
@@ -50,14 +53,13 @@ void forward() {
   analogWrite(MOTOR_LEFT_SPEED_PIN, 75);
   digitalWrite(MOTOR_RIGHT_DIRECTION_PIN, HIGH);
   analogWrite(MOTOR_RIGHT_SPEED_PIN, 75);
-  currentState = MOVING_FORWARD;  
+  currentState = MOVING_FORWARD;
 }
 
 void stopMotors() {
   digitalWrite(MOTOR_LEFT_SPEED_PIN, 0);
   digitalWrite(MOTOR_RIGHT_SPEED_PIN, 0);
-  myServo.write(90);
-  currentState = IDLE;  
+  currentState = IDLE;
 }
 
 void back() {
@@ -65,7 +67,7 @@ void back() {
   analogWrite(MOTOR_LEFT_SPEED_PIN, 70);
   digitalWrite(MOTOR_RIGHT_DIRECTION_PIN, LOW);
   analogWrite(MOTOR_RIGHT_SPEED_PIN, 70);
-  currentState = MOVING_BACK;  
+  currentState = MOVING_BACK;
 }
 
 void turnLeft() {
@@ -73,7 +75,7 @@ void turnLeft() {
   analogWrite(MOTOR_LEFT_SPEED_PIN, 100);
   digitalWrite(MOTOR_RIGHT_DIRECTION_PIN, LOW);
   analogWrite(MOTOR_RIGHT_SPEED_PIN, 100);
-  
+
   delay(700);
 
   stopMotors();
@@ -85,11 +87,54 @@ void turnRight() {
   analogWrite(MOTOR_LEFT_SPEED_PIN, 100);
   digitalWrite(MOTOR_RIGHT_DIRECTION_PIN, HIGH);
   analogWrite(MOTOR_RIGHT_SPEED_PIN, 100);
-  
+
   delay(700);
 
   stopMotors();
-  currentState = IDLE; 
+  currentState = IDLE;
+}
+
+void turnLeftServo() {
+  myServo.write(180);
+  leerDistancia();
+  currentState = IDLE;
+}
+
+void turnRightServo() {
+  myServo.write(0);
+  leerDistancia();
+  currentState = IDLE;
+}
+
+/*void turnLeftServo() {
+  myServo.write(180);  // Gira a la izquierda
+  
+  unsigned long startTime = millis();  // Guarda el tiempo inicial
+  while (millis() - startTime < 3000) {  // Durante 3 segundos
+    leerDistancia();  // Lee continuamente
+    delay(200);  // Pequeño delay entre lecturas
+  }
+  
+  myServo.write(90);  // Vuelve al centro después de 3 segundos
+  currentState = IDLE;
+}
+void turnRightServo() {
+  myServo.write(0);  
+  
+  unsigned long startTime = millis();  
+  while (millis() - startTime < 3000) { 
+    leerDistancia();  
+    delay(200);  
+  }
+  
+  myServo.write(90);  
+  currentState = IDLE;
+}
+*/
+void initialPosition() {
+  myServo.write(90);
+  leerDistancia();
+  currentState = IDLE;
 }
 
 void leerDistancia() {
@@ -102,6 +147,8 @@ void leerDistancia() {
   // Leer duración del pulso y calcular la distancia
   duration = pulseIn(ECHO_PIN, HIGH);
   distance = duration * 0.0344 / 2;  // Calcular distancia en centímetros
+
+  Serial.println(distance);
 }
 
 void autoModeAvoid() {
@@ -135,35 +182,47 @@ void autoModeAvoid() {
 }
 
 void loop() {
+  leerDistancia();  // Siempre lee la distancia
+  delay(200);
+
   if (Serial.available()) {
     op = Serial.read();
     Serial.write(op);
 
-    if (op == '1') {
-      forward();
-      autoMode = false;
-    } else if (op == '2') {
-      stopMotors();
-      autoMode = false;
-    } else if (op == '3') {
-      back();
-      autoMode = false;
-    } else if (op == '4') {
-      turnLeft();
-      autoMode = false;
-    } else if (op == '5') {
-      turnRight();
-      autoMode = false;
-    } else if (op == '6') {
-      autoMode = true;
-    } else if (op == '7') {
-      myServo.write(180);
-      delay(1000);
-      myServo.write(90);
-    } else if (op == '8') {
-      myServo.write(0);
-      delay(1000);
-      myServo.write(90);
+    switch (op) {
+      case '1':
+        autoMode = false;
+        currentState = MOVING_FORWARD;
+        break;
+      case '2':
+        autoMode = false;
+        currentState = IDLE;
+        break;
+      case '3':
+        autoMode = false;
+        currentState = MOVING_BACK;
+        break;
+      case '4':
+        autoMode = false;
+        currentState = TURNING_LEFT;
+        break;
+      case '5':
+        autoMode = false;
+        currentState = TURNING_RIGHT;
+        break;
+      case '6': autoMode = true; break;
+      case '7':
+        autoMode = false;
+        currentState = TURNING_LEFT_SERVO;
+        break;
+      case '8':
+        autoMode = false;
+        currentState = TURNING_RIGHT_SERVO;
+        break;
+      case '9':
+        autoMode = false;
+        currentState = INITIAL_POSITION;
+        break;
     }
   }
 
@@ -171,4 +230,15 @@ void loop() {
     autoModeAvoid();
   }
 
+  switch (currentState) {
+    case MOVING_FORWARD: forward(); break;
+    case IDLE: stopMotors(); break;
+    case MOVING_BACK: back(); break;
+    case TURNING_LEFT: turnLeft(); break;
+    case TURNING_RIGHT: turnRight(); break;
+    case TURNING_LEFT_SERVO: turnLeftServo(); break;
+    case TURNING_RIGHT_SERVO: turnRightServo(); break;
+    case INITIAL_POSITION: initialPosition();
+    default: stopMotors(); break;
+  }
 }
