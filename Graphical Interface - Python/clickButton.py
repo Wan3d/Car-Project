@@ -1,30 +1,31 @@
 def clickButton1(ser):
-    ser.write("1".encode())
+    ser.write("A".encode())
     print("Going forward...")
 def clickButton2(ser):
-    ser.write("2".encode())
+    ser.write("B".encode())
     print("Stopping!")
 def clickButton3(ser):
-    ser.write("3".encode())
+    ser.write("C".encode())
     print("Going back...")
 def clickButton4(ser):
-    ser.write("4".encode())
+    ser.write("D".encode())
     print("Turning left")
 def clickButton5(ser):
-    ser.write("5".encode())
+    ser.write("E".encode())
     print("Turning right")
-def clickButton6(ser):
+'''def clickButton6(ser):
     ser.write("6".encode())
-    print("Turning ON Avoid Obstacles Mode...")
-
-def clickButton7(ser):
-    ser.write("7".encode())
+    print("Turning ON Avoid Obstacles Mode...")'''
+def clickButton6(ser):
+    ser.write("F".encode())
     print("Turning left Servo")
-def clickButton8(ser):
-    ser.write("8".encode())
+def clickButton7(ser):
+    ser.write("G".encode())
     print("Turning right Servo")
-
-def clickButton9(ser):
-    ser.write("9".encode())
+def clickButton8(ser):
+    ser.write("H".encode())
     print("Putting servo on initial position")
+
+
+
 
